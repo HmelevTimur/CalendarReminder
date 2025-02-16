@@ -7,8 +7,8 @@ services:
     restart: always
     environment:
       POSTGRES_DB: calendar_db
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: secret
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-secret}
     ports:
       - "5432:5432"
     volumes:
@@ -23,11 +23,11 @@ services:
       - postgres
     environment:
       ASPNETCORE_ENVIRONMENT: "Development"
+      ASPNETCORE_URLS: "http://+:5000"
+      ConnectionStrings__DefaultConnection: "Host=postgres;Port=5432;Database=calendar_db;Username=${POSTGRES_USER:-admin};Password=${POSTGRES_PASSWORD:-secret}"
     ports:
       - "5000:5000"
       - "5001:5001"
-    volumes:
-      - ./CalendarReminder.Api/appsettings.json:/app/appsettings.json
 
 volumes:
   pgdata:

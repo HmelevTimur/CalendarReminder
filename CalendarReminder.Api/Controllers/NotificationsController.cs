@@ -1,49 +1,21 @@
-﻿using CalendarReminder.Infrastructure.Persistence;
-using CalendarReminder.Domain.Entities;
+﻿using CalendarReminder.Application.Dtos;
+using CalendarReminder.Application.Services.Implementations;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
-namespace CalendarReminder.Api.Controllers
+namespace CalendarReminder.Api.Controllers;
+
+[ApiController]
+[Route("api/notifications")]
+public class NotificationController(FirebaseNotificationService firebaseService) : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class NotificationsController(CalendarDbContext context) : ControllerBase
+    [HttpPost("send")]
+    public async Task<IActionResult> SendNotification([FromBody] NotificationRequestDto request)
     {
-        // Отправка уведомлений для напоминаний
-        [HttpPost("send/{reminderId}")]
-        public async Task<IActionResult> SendNotification(Guid reminderId)
-        {
-            var reminder = await context.Reminders
-                .Include(r => r.CalendarEvent)
-                .Include(r => r.CalendarEvent.Users)
-                .FirstOrDefaultAsync(r => r.Id == reminderId);
+        var response = await firebaseService.SendPushNotificationAsync(request.DeviceToken, request.Title, request.Body);
+        
+        if (response != null)
+            return Ok(new { MessageId = response });
 
-            if (reminder == null)
-                return NotFound("Reminder not found.");
-
-            // Проверяем, если напоминание уже было отправлено
-            if (reminder.IsSent)
-                return BadRequest("Reminder already sent.");
-
-            // Логика отправки уведомлений (например, через Firebase или SignalR)
-            foreach (var user in reminder.CalendarEvent.Users)
-            {
-                await SendPushNotification(user, reminder.Message);
-            }
-
-            // Отмечаем напоминание как отправленное
-            reminder.IsSent = true;
-            context.Reminders.Update(reminder);
-            await context.SaveChangesAsync();
-
-            return Ok("Notifications sent.");
-        }
-
-        private Task SendPushNotification(User user, string? message)
-        {
-            // Пример: Псевдокод для отправки уведомлений
-            // Реализуйте логику через SignalR, Firebase, или иной сервис
-            return Task.CompletedTask;
-        }
+        return BadRequest("Ошибка при отправке уведомления");
     }
 }

@@ -1,3 +1,6 @@
+using CalendarReminder.Application.MappingProfile;
+using CalendarReminder.Application.Services.Implementations;
+using CalendarReminder.Application.Services.Interfaces;
 using CalendarReminder.Infrastructure.Persistence;
 using Microsoft.AspNetCore.OData;
 using Microsoft.EntityFrameworkCore;
@@ -12,8 +15,13 @@ builder.Services.AddDbContext<CalendarDbContext>(options =>
 builder.Services.AddControllers().AddOData(options =>
     options.Select().Filter().OrderBy().Expand().SetMaxTop(100));
 
-builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddSingleton<FirebaseNotificationService>();
+builder.Services.AddScoped<ICalendarExportService, CalendarExportService>();
+
+
+builder.Services.AddAutoMapper(typeof(MappingProfile));
 
 var app = builder.Build();
 

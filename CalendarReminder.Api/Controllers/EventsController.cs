@@ -1,4 +1,6 @@
-﻿using CalendarReminder.Infrastructure.Persistence;
+﻿using AutoMapper;
+using CalendarReminder.Application.Dtos;
+using CalendarReminder.Infrastructure.Persistence;
 using CalendarReminder.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -7,59 +9,78 @@ namespace CalendarReminder.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class EventsController(CalendarDbContext context) : ControllerBase
+    public class EventsController(CalendarDbContext context, IMapper mapper) : ControllerBase
     {
         // Получение всех событий
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<CalendarEvent>>> GetEvents()
+        public async Task<ActionResult<IEnumerable<CalendarEventDto>>> GetEvents()
         {
             var events = await context.Events
                 .Include(e => e.Reminders)
                 .Include(e => e.Users)
                 .ToListAsync();
-            return Ok(events);
+
+            var eventDtos = mapper.Map<List<CalendarEventDto>>(events);
+            return Ok(eventDtos);
         }
 
         // Получение одного события по ID
         [HttpGet("{id}")]
-        public async Task<ActionResult<CalendarEvent>> GetEvent(Guid id)
+        public async Task<ActionResult<CalendarEventDto>> GetEvent(Guid id)
         {
             var calendarEvent = await context.Events
                 .Include(e => e.Reminders)
-                .Include(e => e.Users) 
                 .FirstOrDefaultAsync(e => e.Id == id);
 
             if (calendarEvent == null)
-                return NotFound("Event not found.");
+                return NotFound("Событие не найдено.");
 
-            return Ok(calendarEvent);
+            var eventDto = mapper.Map<CalendarEventDto>(calendarEvent);
+            return Ok(eventDto);
         }
 
         // Создание нового события
         [HttpPost]
-        public async Task<ActionResult<CalendarEvent>> CreateEvent(CalendarEvent calendarEvent)
+        public async Task<IActionResult> CreateEvent([FromBody] CalendarEventDto? calendarEventDto)
         {
-            // Связываем пользователя с событием
-            var user = await context.Users.FirstOrDefaultAsync(u => u.Id == calendarEvent.CreatedBy.Id);
-            if (user == null) return BadRequest("User not found.");
+            if (calendarEventDto == null)
+            {
+                return BadRequest("Переданы неверные данные.");
+            }
 
-            calendarEvent.CreatedBy = user;
+            if (calendarEventDto.UserId == null)
+            {
+                return BadRequest("Пользователь не найден.");
+            }
+
+            var userExists = await context.Users.AnyAsync(u => u.Id == calendarEventDto.UserId);
+            if (!userExists)
+            {
+                return BadRequest("Пользователь не найден.");
+            }
+
+            var calendarEvent = mapper.Map<CalendarEvent>(calendarEventDto);
 
             context.Events.Add(calendarEvent);
             await context.SaveChangesAsync();
 
-            return CreatedAtAction(nameof(GetEvent), new { id = calendarEvent.Id }, calendarEvent);
+            return CreatedAtAction(nameof(GetEvent), new { id = calendarEvent.Id },
+                mapper.Map<CalendarEventDto>(calendarEvent));
         }
 
         // Обновление события
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateEvent(Guid id, CalendarEvent calendarEvent)
+        public async Task<IActionResult> UpdateEvent(Guid id, [FromBody] CalendarEventDto calendarEventDto)
         {
-            if (id != calendarEvent.Id)
-                return BadRequest("Event ID mismatch.");
+            var calendarEvent = await context.Events.FindAsync(id);
+            if (calendarEvent == null)
+                return NotFound("Событие не найдено.");
 
-            context.Entry(calendarEvent).State = EntityState.Modified;
+            mapper.Map(calendarEventDto, calendarEvent);
+
+            context.Events.Update(calendarEvent);
             await context.SaveChangesAsync();
+
             return NoContent();
         }
 
@@ -69,7 +90,7 @@ namespace CalendarReminder.Api.Controllers
         {
             var calendarEvent = await context.Events.FindAsync(id);
             if (calendarEvent == null)
-                return NotFound("Event not found.");
+                return NotFound("Событие не найдено.");
 
             context.Events.Remove(calendarEvent);
             await context.SaveChangesAsync();

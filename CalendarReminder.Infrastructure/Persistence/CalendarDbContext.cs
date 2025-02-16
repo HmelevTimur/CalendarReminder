@@ -16,7 +16,7 @@ public class CalendarDbContext(DbContextOptions<CalendarDbContext> options) : Db
         modelBuilder.Entity<CalendarEvent>()
             .HasOne(ce => ce.CreatedBy)
             .WithMany(u => u.CalendarEvents)
-            .HasForeignKey(ce => ce.CreatedById)
+            .HasForeignKey(ce => ce.UserId)
             .OnDelete(DeleteBehavior.SetNull);
 
       
