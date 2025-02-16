@@ -17,8 +17,12 @@ builder.Services.AddControllers().AddOData(options =>
 
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddSingleton<FirebaseNotificationService>();
 builder.Services.AddScoped<ICalendarExportService, CalendarExportService>();
+builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<IPushNotificationService, TestNotificationService>();
+builder.Services.AddScoped<IReminderService, ReminderService>();
+builder.Services.AddHostedService<ReminderBackgroundService>();
+
 
 
 builder.Services.AddAutoMapper(typeof(MappingProfile));

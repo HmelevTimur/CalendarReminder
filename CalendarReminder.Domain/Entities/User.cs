@@ -7,4 +7,5 @@ public class User
     public Guid Id { get; set; } = Guid.NewGuid();
     [Required] public string UserName { get; set; }
     public ICollection<CalendarEvent> CalendarEvents { get; set; }
+    public string? DeviceToken { get; set; }
 }

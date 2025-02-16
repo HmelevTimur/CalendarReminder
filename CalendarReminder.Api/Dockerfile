@@ -21,3 +21,5 @@ FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
 ENTRYPOINT ["dotnet", "CalendarReminder.Api.dll"]
+
+CMD ["sh", "-c", "dotnet ef database update && dotnet CalendarReminder.Api.dll"]

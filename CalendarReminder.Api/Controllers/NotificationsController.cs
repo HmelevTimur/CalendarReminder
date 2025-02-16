@@ -1,21 +1,22 @@
 ﻿using CalendarReminder.Application.Dtos;
-using CalendarReminder.Application.Services.Implementations;
+using CalendarReminder.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
-namespace CalendarReminder.Api.Controllers;
-
-[ApiController]
-[Route("api/notifications")]
-public class NotificationController(FirebaseNotificationService firebaseService) : ControllerBase
+namespace CalendarReminder.Api.Controllers
 {
-    [HttpPost("send")]
-    public async Task<IActionResult> SendNotification([FromBody] NotificationRequestDto request)
+    [ApiController]
+    [Route("api/notifications")]
+    public class NotificationController(IPushNotificationService pushNotificationService) : ControllerBase
     {
-        var response = await firebaseService.SendPushNotificationAsync(request.DeviceToken, request.Title, request.Body);
-        
-        if (response != null)
-            return Ok(new { MessageId = response });
+        [HttpPost("send")]
+        public async Task<IActionResult> SendNotification([FromBody] NotificationRequestDto request)
+        {
+            var response = await pushNotificationService.SendPushNotificationAsync(request.DeviceToken, request.Title, request.Body);
+            
+            if (response)
+                return Ok(new { Message = "Уведомление успешно отправлено" });
 
-        return BadRequest("Ошибка при отправке уведомления");
+            return BadRequest("Ошибка при отправке уведомления");
+        }
     }
 }
