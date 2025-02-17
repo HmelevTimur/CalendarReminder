@@ -8,7 +8,7 @@ public class CalendarDbContext(DbContextOptions<CalendarDbContext> options) : Db
     public DbSet<CalendarEvent> Events { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<Reminder> Reminders { get; set; }
-    
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -18,7 +18,5 @@ public class CalendarDbContext(DbContextOptions<CalendarDbContext> options) : Db
             .WithMany(u => u.CalendarEvents)
             .HasForeignKey(ce => ce.UserId)
             .OnDelete(DeleteBehavior.SetNull);
-
-      
     }
 }

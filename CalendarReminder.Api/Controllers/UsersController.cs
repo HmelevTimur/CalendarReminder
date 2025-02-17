@@ -4,6 +4,7 @@ using CalendarReminder.Application.Services.Interfaces;
 using CalendarReminder.Domain.Entities;
 using CalendarReminder.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
 using Microsoft.EntityFrameworkCore;
 
 namespace CalendarReminder.Api.Controllers
@@ -17,6 +18,7 @@ namespace CalendarReminder.Api.Controllers
     {
         // Получение всех пользователей
         [HttpGet]
+        [EnableQuery]
         public async Task<ActionResult<IEnumerable<ReturnUserDto>>> GetUsers()
         {
             var users = await context.Users.ToListAsync();
@@ -26,6 +28,7 @@ namespace CalendarReminder.Api.Controllers
 
         // Получение пользователя по ID
         [HttpGet("{id}")]
+        [EnableQuery]
         public async Task<ActionResult<ReturnUserDto>> GetUser(Guid id)
         {
             var user = await context.Users.FindAsync(id);
@@ -52,6 +55,7 @@ namespace CalendarReminder.Api.Controllers
         }
 
         [HttpGet("export/{userId}")]
+        [EnableQuery]
         public async Task<IActionResult> ExportCalendar(Guid userId)
         {
             try

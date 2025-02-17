@@ -1,6 +1,7 @@
 ﻿using CalendarReminder.Application.Dtos;
 using CalendarReminder.Application.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.OData.Query;
 
 namespace CalendarReminder.Api.Controllers;
 
@@ -9,6 +10,7 @@ namespace CalendarReminder.Api.Controllers;
 public class EventsController(IEventService eventService) : ControllerBase
 {
     [HttpGet]
+    [EnableQuery]
     public async Task<ActionResult<IEnumerable<CalendarEventDto>>> GetEvents()
     {
         var events = await eventService.GetEventsAsync();
@@ -16,6 +18,7 @@ public class EventsController(IEventService eventService) : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [EnableQuery]
     public async Task<IActionResult> GetEvent(Guid id)
     {
         var calendarEvent = await eventService.GetEventByIdAsync(id);
